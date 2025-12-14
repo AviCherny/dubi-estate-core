@@ -15,3 +15,8 @@ class WeatherAssessment(BaseModel):
     average_temperature: float
     weather_condition: str
     heat_risk_level: str | None = None
+
+class TravelPlan(BaseModel):
+    final_destination: str
+    was_modified: bool
+    explanation: str
