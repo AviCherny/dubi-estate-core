@@ -1,7 +1,7 @@
 from datetime import date
 
 from app.tools.weather_tool import get_weather, City
-from app.domain.models import assess_weather
+from project.app.domain.weather_assessment import assess_weather
 
 
 def main():

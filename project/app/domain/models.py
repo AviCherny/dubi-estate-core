@@ -1,17 +1,24 @@
 from enum import Enum
 from pydantic import BaseModel
+from datetime import date
 
-from app.tools.weather_tool import City, WeatherData, WeatherCondition
+
+from app.tools.weather_tool import City, WeatherCondition
 
 class HeatRiskLevel(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
 
+class TravelPlanStatus(str, Enum):
+    APPROVED = "approved"
+    MODIFIED = "modified"
+    REJECTED = "rejected"
+
 class TravelRequest(BaseModel):
     destination: City
-    departure_date: str
-    return_date: str | None = None
+    departure_date: date | None = None
+    return_date: date | None = None
     passengers: int = 1
 
     child_age: int | None = None
@@ -25,26 +32,10 @@ class WeatherAssessment(BaseModel):
 
 class TravelPlan(BaseModel):
     final_destination: City
-    was_modified: bool
+    status: TravelPlanStatus
     explanation: str
 
 class HeatAssessment(BaseModel): # הערכת סיכוני חום
     heat_risk_level: HeatRiskLevel
 
-def assess_heat(temperature: float) -> HeatAssessment:
-    if temperature >= 35:
-        return HeatAssessment(heat_risk_level=HeatRiskLevel.HIGH)
-    elif 25 <= temperature < 35:
-        return HeatAssessment(heat_risk_level=HeatRiskLevel.MEDIUM)
-    else:
-        return HeatAssessment(heat_risk_level=HeatRiskLevel.LOW)
-    
-def assess_weather(weatherdata: WeatherData) -> WeatherAssessment:
-    heat = assess_heat(weatherdata.temperature)
-
-    return WeatherAssessment(
-        destination=weatherdata.destination,
-        average_temperature=weatherdata.temperature,
-        weather_condition=weatherdata.weather_condition,
-        heat_risk_level=heat.heat_risk_level)
     
