@@ -1,3 +1,5 @@
 {
-  "python.defaultInterpreterPath": "python"
+  "python.analysis.extraPaths": [
+    "./project"
+  ]
 }

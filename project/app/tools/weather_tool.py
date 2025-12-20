@@ -3,6 +3,9 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+from datetime import date
+
+
 
 class WeatherCondition(str, Enum):  # we need str to make it JSON serializable in other words to avoid do .value calls
     SUNNY = "sunny"
