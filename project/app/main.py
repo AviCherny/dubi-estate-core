@@ -1,13 +1,28 @@
 from datetime import date
 
-from app.agents.travel_agent import decide_travel_plan
+from app.agents.travel_agent import (
+    decide_travel_plan,
+    suggest_alternative_destination,
+)
 from app.domain.models import TravelPlanStatus, TravelRequest
 from app.domain.weather_assessment import assess_weather
 from app.tools.weather_tool_api import get_weather_real, City
 
+
 def main():
-    base_request = TravelRequest(
-        destination=City.DUBAI,  # placeholder, לא באמת בשימוש
+    """
+    Orchestrator v1.
+
+    Flow:
+    1. Try original destination.
+    2. If rejected, suggest one alternative destination.
+    3. Try the alternative once.
+    4. If rejected again, stop intentionally.
+    """
+
+    # Initial request (single source of truth for user constraints)
+    request = TravelRequest(
+        destination=City.DUBAI,
         departure_date=date.today(),
         return_date=None,
         passengers=2,
@@ -15,33 +30,46 @@ def main():
         child_heat_sensitive=True,
     )
 
-# Iterate over all possible destinations.
-# Each iteration represents a new travel attempt with the same user constraints
-# but a different destination.
-    for destination in City:
-        request = TravelRequest(
-# Create a new TravelRequest for this iteration.
-# We copy all constant user constraints from base_request
-# and set only the destination for this specific attempt.
-# This keeps requests immutable and avoids shared state.
-            **base_request.model_dump(exclude={"destination"}),
-            destination=destination,
-        )
-        
-# Fetch real weather data for the destination of the current travel attempt.
-        weather_data = get_weather_real(
-            destination=request.destination,
-            date=request.departure_date,
-        )
+    # ---------- First attempt ----------
+    weather_data = get_weather_real(
+        destination=request.destination,
+        date=request.departure_date,
+    )
+    assessment = assess_weather(weather_data)
+    travel_plan = decide_travel_plan(request, assessment)
 
-        assessment = assess_weather(weather_data)
-        travel_plan = decide_travel_plan(request, assessment)
+    print("Initial plan:", travel_plan)
+    print("Initial weather data:", weather_data)
 
-        print(travel_plan)
-        print(assessment)
+    if travel_plan.status == TravelPlanStatus.APPROVED:
+        # Success on first attempt
+        return
 
-        if travel_plan.status == TravelPlanStatus.APPROVED:
-            break
+    # ---------- One alternative attempt ----------
+    alternative_plan = suggest_alternative_destination(
+        request=request,
+        rejected_plan=travel_plan,
+    )
+    # create a popy of the original request with the new destination
+    alternative_request = request.model_copy(
+        update={"destination": alternative_plan.final_destination}
+    )
+
+    weather_data = get_weather_real(
+        destination=alternative_request.destination,
+        date=alternative_request.departure_date,
+    )
+    assessment = assess_weather(weather_data)
+    final_plan = decide_travel_plan(alternative_request, assessment)
+
+    print("Final plan:", final_plan)
+    print("Final weather data:", weather_data)
+    
+
+    if final_plan.status == TravelPlanStatus.REJECTED:
+        # Stop here intentionally – no further retries
+        print("No safe destination found after alternative attempt.")
+        return
 
 
 if __name__ == "__main__":

@@ -39,8 +39,4 @@ class TravelPlan(BaseModel):
     explanation: str
     rejection_reason: RejectionReason | None = None
 
-
-class HeatAssessment(BaseModel): # הערכת סיכוני חום
-    heat_risk_level: HeatRiskLevel
-
     

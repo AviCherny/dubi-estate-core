@@ -1,5 +1,3 @@
-from datetime import date
-
 from app.tools.weather_tool import WeatherData, City, WeatherCondition
 from datetime import date
 import requests
@@ -64,5 +62,5 @@ def get_weather_real(destination : City, date : date)-> WeatherData:
     return WeatherData(
         destination=destination,
         temperature=temperature,
-        weather_condition=WeatherCondition.SUNNY,  # TODO : implement real condition mapping
+        weather_condition=WeatherCondition.SUNNY,  # TODO: map real condition from API (kept simple for now)
     )

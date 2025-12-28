@@ -43,9 +43,10 @@ MOCK_WEATHER_BY_DESTINATION = {
 }
 
 class WeatherData(BaseModel):
-    '''
-    Domain Models for Weather Tool
-    '''
+    """
+    Raw weather facts returned by weather tools.
+    Contains no interpretation or decisions.
+    """
     destination: City
     temperature: float
     weather_condition: WeatherCondition
