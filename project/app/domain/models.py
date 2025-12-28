@@ -15,6 +15,9 @@ class TravelPlanStatus(str, Enum):
     MODIFIED = "modified"
     REJECTED = "rejected"
 
+class RejectionReason(str, Enum):
+    HEAT_RISK = "heat_risk"
+
 class TravelRequest(BaseModel):
     destination: City
     departure_date: date | None = None
@@ -34,6 +37,8 @@ class TravelPlan(BaseModel):
     final_destination: City
     status: TravelPlanStatus
     explanation: str
+    rejection_reason: RejectionReason | None = None
+
 
 class HeatAssessment(BaseModel): # הערכת סיכוני חום
     heat_risk_level: HeatRiskLevel

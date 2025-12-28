@@ -15,6 +15,9 @@ class WeatherCondition(str, Enum):  # we need str to make it JSON serializable i
 class City(str, Enum):
     DUBAI = "Dubai"
     LONDON = "London"
+    PARIS = "Paris"
+    ROME = "Rome"
+    BANGKOK = "Bangkok"
 
 MOCK_WEATHER_BY_DESTINATION = {
     City.DUBAI: {
@@ -25,6 +28,18 @@ MOCK_WEATHER_BY_DESTINATION = {
         "temperature": 18,
         "condition": WeatherCondition.CLOUDY,
     },
+    City.PARIS: {
+        "temperature": 22,
+        "condition": WeatherCondition.CLOUDY,
+    },
+    City.ROME: {
+        "temperature": 30,
+        "condition": WeatherCondition.SUNNY,
+    },
+    City.BANGKOK: {
+    "temperature": 36,
+    "condition": WeatherCondition.SUNNY,
+},
 }
 
 class WeatherData(BaseModel):

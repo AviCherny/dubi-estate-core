@@ -10,6 +10,11 @@ from typing import Dict, Any
 CITY_COORDINATES  = {
     City.DUBAI: (25.276987, 55.296249),
     City.LONDON: (51.507351, -0.127758),
+    City.PARIS: (48.856613, 2.352222),
+    City.ROME: (41.902782, 12.496366),
+    City.BANGKOK: (13.756331, 100.501762),
+
+
 }
 
 def _fetch_weather_from_api(latitude: float, longitude: float, target_date: date) ->  Dict[str, Any]:
