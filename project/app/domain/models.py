@@ -1,8 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
 from datetime import date
-
-
 from app.tools.weather_tool import City, WeatherCondition
 
 class HeatRiskLevel(str, Enum):

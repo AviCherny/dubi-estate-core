@@ -11,8 +11,6 @@ CITY_COORDINATES  = {
     City.PARIS: (48.856613, 2.352222),
     City.ROME: (41.902782, 12.496366),
     City.BANGKOK: (13.756331, 100.501762),
-
-
 }
 
 def _fetch_weather_from_api(latitude: float, longitude: float, target_date: date) ->  Dict[str, Any]:
