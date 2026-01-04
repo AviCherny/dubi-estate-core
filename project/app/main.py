@@ -6,6 +6,7 @@ from app.agents.travel_agent import (
 )
 from app.domain.models import TravelPlanStatus, TravelRequest
 from app.domain.weather_assessment import assess_weather
+from app.explainers.llm_rejection_explainer import explain_rejection_with_llm
 from app.tools.weather_tool_api import get_weather_real, City
 
 
@@ -44,15 +45,21 @@ def main():
     if travel_plan.status == TravelPlanStatus.APPROVED:
         # Success on first attempt
         return
-
+    
+    # Explain rejection
+    explanation = explain_rejection_with_llm(
+        request=request,
+        plan=travel_plan,
+    )
+    print(explanation)
     # ---------- One alternative attempt ----------
-    alternative_plan = suggest_alternative_destination(
+    alternative_suggestion = suggest_alternative_destination(
         request=request,
         rejected_plan=travel_plan,
     )
-    # create a popy of the original request with the new destination
+    # create a copy of the original request with the new destination
     alternative_request = request.model_copy(
-        update={"destination": alternative_plan.final_destination}
+        update={"destination": alternative_suggestion.final_destination}
     )
 
     weather_data = get_weather_real(
@@ -68,7 +75,11 @@ def main():
 
     if final_plan.status == TravelPlanStatus.REJECTED:
         # Stop here intentionally – no further retries
-        print("No safe destination found after alternative attempt.")
+        explanation =explain_rejection_with_llm(
+            request=alternative_request,
+            plan=final_plan,
+        )
+        print(explanation)
         return
 
 
