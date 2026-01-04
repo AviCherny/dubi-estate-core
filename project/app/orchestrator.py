@@ -4,13 +4,12 @@ from app.agents.travel_agent import (
     decide_travel_plan,
     suggest_alternative_destination,
 )
-from app.domain.models import TravelPlanStatus, TravelRequest
+from app.domain.models import TravelPlan, TravelPlanStatus, TravelRequest
 from app.domain.weather_assessment import assess_weather
-from app.explainers.llm_rejection_explainer import explain_rejection_with_llm
 from app.tools.weather_tool_api import get_weather_real, City
 
 
-def main():
+def run_travel_flow(request: TravelRequest) -> TravelPlan:
     """
     Orchestrator v1.
 
@@ -21,16 +20,6 @@ def main():
     4. If rejected again, stop intentionally.
     """
 
-    # Initial request (single source of truth for user constraints)
-    request = TravelRequest(
-        destination=City.DUBAI,
-        departure_date=date.today(),
-        return_date=None,
-        passengers=2,
-        child_age=5,
-        child_heat_sensitive=True,
-    )
-
     # ---------- First attempt ----------
     weather_data = get_weather_real(
         destination=request.destination,
@@ -39,19 +28,11 @@ def main():
     assessment = assess_weather(weather_data)
     travel_plan = decide_travel_plan(request, assessment)
 
-    print("Initial plan:", travel_plan)
-    print("Initial weather data:", weather_data)
 
     if travel_plan.status == TravelPlanStatus.APPROVED:
         # Success on first attempt
-        return
+        return travel_plan
     
-    # Explain rejection
-    explanation = explain_rejection_with_llm(
-        request=request,
-        plan=travel_plan,
-    )
-    print(explanation)
     # ---------- One alternative attempt ----------
     alternative_suggestion = suggest_alternative_destination(
         request=request,
@@ -69,19 +50,4 @@ def main():
     assessment = assess_weather(weather_data)
     final_plan = decide_travel_plan(alternative_request, assessment)
 
-    print("Final plan:", final_plan)
-    print("Final weather data:", weather_data)
-    
-
-    if final_plan.status == TravelPlanStatus.REJECTED:
-        # Stop here intentionally – no further retries
-        explanation =explain_rejection_with_llm(
-            request=alternative_request,
-            plan=final_plan,
-        )
-        print(explanation)
-        return
-
-
-if __name__ == "__main__":
-    main()
+    return final_plan
