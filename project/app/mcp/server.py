@@ -1,5 +1,4 @@
 from typing import Dict, Callable, Any
-from app.mcp.tools.plan_trip import plan_trip
 
 
 class MCPServer:
@@ -7,12 +6,12 @@ class MCPServer:
     MCPServer is a lightweight gateway responsible for:
     - Registering available tools
     - Dispatching tool calls by name
-    - Staying completely unaware of business logic
+    - Wrapping execution with an error boundary
 
     It does NOT:
-    - Validate business rules
-    - Make decisions
+    - Contain business logic
     - Know domain concepts
+    - Orchestrate flows
     """
 
     def __init__(self) -> None:
@@ -22,43 +21,46 @@ class MCPServer:
         The registry maps:
         - tool name (str)
         - to a callable Python function
-
-        Tools are registered explicitly during server bootstrap.
         """
-        #MCP maintains a mapping between tool names (strings) and the actual Python functions that implement them.
         self.tools: Dict[str, Callable[..., Any]] = {}
 
     def register_tool(self, name: str, func: Callable[..., Any]) -> None:
         """
         Registers a tool in the MCP server.
-
-        Args:
-            name: Public tool name exposed to MCP clients
-            func: The function that will be executed when the tool is called
-
-        This allows the MCP server to remain generic and extensible.
         """
         self.tools[name] = func
 
-    def call_tool(self, name: str, **kwargs: Any) -> Any:
+    def call_tool(self, name: str, **kwargs: Any) -> Dict[str, Any]:
         """
-        Executes a registered tool by name.
+        Executes a registered tool by name and wraps execution with
+        a unified error boundary.
 
-        Args:
-            name: The tool name requested by the client
-            **kwargs: Raw input payload (typically JSON)
-
-        Returns:
-            The tool result as a serializable object
-
-        Raises:
-            KeyError: If the requested tool is not registered
+        MCP responsibility:
+        - Never crash outward
+        - Always return a structured response
         """
         if name not in self.tools:
-            raise KeyError(f"Tool '{name}' is not registered")
+            return {
+                "status": "ERROR",
+                "tool": name,
+                "error": f"Tool '{name}' is not registered"
+            }
 
         tool_func = self.tools[name]
-        return tool_func(**kwargs)
+
+        try:
+            result = tool_func(**kwargs)
+            return {
+                "status": "SUCCESS",
+                "tool": name,
+                "data": result
+            }
+        except Exception as e:
+            return {
+                "status": "ERROR",
+                "tool": name,
+                "error": str(e)
+            }
 
 
 def create_server() -> MCPServer:
@@ -68,10 +70,6 @@ def create_server() -> MCPServer:
     This is the main bootstrap entry point and is intended to be:
     - Used by the application runtime
     - Wrapped later by an AWS Lambda handler
-
-    All tools exposed by MCP must be registered here.
     """
     server = MCPServer()
-    # Register MCP tools here
-    server.register_tool("plan_trip", plan_trip)
     return server

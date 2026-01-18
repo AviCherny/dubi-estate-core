@@ -1,33 +1,31 @@
-from datetime import date
-from app.orchestrator import run_travel_flow
-from app.domain.models import TravelPlanStatus, TravelRequest
-from app.explainers.llm_rejection_explainer import explain_rejection_with_llm
-from app.tools.weather_tool import City
+from app.mcp.server import create_server
+from app.mcp.tools.evaluate_tenant import evaluate_tenant
 
+def main():
+    # 1. Create MCP server
+    server = create_server()
 
+    # 2. Register the tool
+    server.register_tool("evaluate_tenant", evaluate_tenant)
 
-def run():
+    # 3. Minimal valid payload
+    payload = {
+        "monthly_income": 10000,
+        "credit_score": 720,
+        "employment_status": "employed",
+        "has_debts": False,
+        "has_guarantor": False,
+        "legal_status": "citizen",
+        "eviction_history": False,
+        "criminal_record": "no"
+    }
 
-    request = TravelRequest(
-        destination=City.DUBAI,
-        departure_date=date.today(),
-        return_date=None,
-        passengers=2,
-        child_age=5,
-        child_heat_sensitive=True,
-    )
+    # 4. Call MCP
+    result = server.call_tool("evaluate_tenant", **payload)
 
-    plan = run_travel_flow(request)
-
-    if plan.status == TravelPlanStatus.REJECTED:
-        explanation = explain_rejection_with_llm(
-            request=request,  
-            plan=plan,
-        )
-        print(explanation)
-    else:
-        print("Travel approved:", plan.final_destination)
+    print("\n=== MCP RESULT ===")
+    print(result)
 
 
 if __name__ == "__main__":
-    run()
+    main()
