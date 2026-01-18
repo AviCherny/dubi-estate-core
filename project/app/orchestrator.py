@@ -1,33 +1,35 @@
+from app.agents.tenant_agent import evaluate_tenant_risk
 from app.mcp.contracts.evaluate_tenant_contract import EvaluateTenantOutput
 
 
 def dubi_evaluate_tenant(req):
     """
-    DUBI – Supervisor Agent (stub)
+    DUBI – Supervisor Agent (v1)
 
     Responsibilities:
     - Receive clean domain input (EvaluateTenantInput)
-    - Decide which agents to call (future)
-    - Aggregate results (future)
-    - Route to appropriate Real Estate agents
+    - Decide which agents to call
+    - Aggregate their results
+    - Build the final system decision (MCP output)
 
-    For now:
-    - Return a stub response
-
-    This is the entry point for the Real Estate AI Agent architecture.
-    Future agents will be composed here:
-    - CreditScoreAgent
-    - EmploymentVerificationAgent
-    - EvictionHistoryAgent
-    - etc.
+    Current version:
+    - Uses a single agent: Tenant Agent
+    - Designed to scale to multiple agents later
     """
 
+    # 1. Call Tenant Agent
+    tenant_result = evaluate_tenant_risk(req)
+
+    # 2. Translate agent result into system-level decision
+    status = "APPROVED" if tenant_result["approved"] else "REJECTED"
+
+    # 3. Build final MCP contract output
     return EvaluateTenantOutput(
-        tenant_id=getattr(req, 'tenant_id', 'unknown'),
-        evaluation_score=50.0,
-        evaluation_details={
-            "status": "REVIEW",
-            "reason": "Stub response from DUBI – Real Estate agents not implemented yet"
-        },
-        is_approved=False
-    )
+    tenant_id="unknown",
+    evaluation_score=tenant_result["score"],
+    evaluation_details={
+        "approved": tenant_result["approved"],
+        "reasons": tenant_result["reasons"]
+    },
+    is_approved=tenant_result["approved"]
+)
