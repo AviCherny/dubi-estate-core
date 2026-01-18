@@ -1,33 +1,7 @@
-from app.domain.models import TravelPlan, TravelRequest
+"""
+This module has been moved to archive_travel/explainers/travel_plan_explainer.py
 
-
-def explain_travel_plan(request: TravelRequest, plan: TravelPlan) -> str:
-    """
-    Explainer Agent.
-
-    Responsibilities:
-    - Format and explain the final travel plan to the user.
-    - Provide a human-readable summary of the decision and reasoning.
-    - Include the original request, final decision, and explanation.
-
-    Args:
-        request: The original travel request.
-        plan: The final travel plan after all agents have processed it.
-
-    Returns:
-        A formatted string explanation of the travel plan.
-    """
-
-    explanation = f"""
-Travel Plan Summary:
-====================
-Requested Destination: {request.destination}
-Final Destination: {plan.final_destination}
-Status: {plan.status}
-Explanation: {plan.explanation}
+This file contains legacy Travel system explanation logic and is no longer used in the
+active application. See archive_travel/explainers/ for historical reference.
 """
 
-    if plan.rejection_reason:
-        explanation += f"Rejection Reason: {plan.rejection_reason}\n"
-
-    return explanation
